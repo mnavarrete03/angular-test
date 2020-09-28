@@ -8,7 +8,7 @@ exports.create=(req,res,next)=>{
     const newUser={
         name:req.body.name,
         username:req.body.username,
-        password:req.body.password,
+        password:bcrypt.hashSync(req.body.password),
     }
 
     user.create(newUser,(error,user)=>{
@@ -30,11 +30,15 @@ exports.login=(req,res,next)=>{
         if(!user){
             res.estatus(409).send({message:'Oops!'});
         }else{
-            const resultPassword=userData.password;
+            const resultPassword=bcrypt.compareSync(userData.password,user.password);
             if(resultPassword){
                 const expiresIn=60000;
                 const accessToken=jwt.sign({id:user.id},SECRET_KEY,{expiresIn:expiresIn});
-                res.send({userData});
+                const userLogedIn={
+                    username:req.body.username,
+                    accessToken:accessToken,
+                }
+                res.send({userLogedIn});
             }else{
                 res.estatus(409).send({message:'Oops!'});
             }
